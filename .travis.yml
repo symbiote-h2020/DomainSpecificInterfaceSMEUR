@@ -1,0 +1,35 @@
+language: java
+env:
+  global:
+  - GITHUB_REPO=symbiote-h2020/DomainSpecificInterfaceSMEUR
+  - secure: fOC9pg+6Z+e6iAnJiopxymJrg1jmbm01WYWcVa1SFxW5yizviQLtotzqMtzf1h3a6OCgdBIg4yoHNvwKIR44vNprzByQNhMddEnUl96RjZSmsJni7JAPesytg6REgv6BLXp2xlUZihrSMcX9yqsJZSXuL7amZX6eqkGI3rhiChNJkNv3fAbotg9gU2g4txYKCwv/sVykkIkzdC9R9I6v8TL6q+Lfozgbh4LXPNs6x67PV3delGpat2BJ/nkCj0/s/sIEj5U7YCErDN1D6i2AH2Va0AO+AzSoFvP1YG3mQYLdl72DdJ7uhcw4C9uWDvB5jKZlCGUS3RQuHV1Cq7kyooxZcLscel4BNZz4GO0YSjWgMeyEiIhI5qCz54nmuCcZhOvdMD1DIDtIqiyXGKYmEJflMU0JPFvEgZveIdpFd/Hofjy9s+Xv05JlsuPFOGmEZ1kglFOHj4onqV4mGTfwrY0mnGDogrR6YYd188ePG+HVGsRFI5jI/DuNrkDE+T0Xb/v+13AiskdZcDf5pZIpGy2NfFjhVX7ObU4lsaJmUSXS57twSfhGw0RZzSPYotN6fi7pG9Z8USLL59rgONISoDv2iUXhSc6CUqsS2ANK/BQ/PqR0mAO2DZtcjkBAaZosVL8/e908eTDGhrNk+0XhL+CFJewPa3ilfsy/g3szE9Q=
+jdk:
+- oraclejdk8
+services:
+- mongodb
+- rabbitmq
+sudo: required
+branches:
+  only:
+  - staging
+install: true
+before_cache:
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+before_script:
+- chmod a+x merge_script.sh
+- "./merge_script.sh"
+script:
+- gradle check --refresh-dependencies
+after_success:
+- chmod a+x pushing_script.sh
+- "./pushing_script.sh"
+- bash <(curl -s https://codecov.io/bash)
+notifications:
+  email:
+    on_success: never
+    on_failure: always
