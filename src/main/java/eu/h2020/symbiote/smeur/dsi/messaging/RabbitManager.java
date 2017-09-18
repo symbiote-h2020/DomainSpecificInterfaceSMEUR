@@ -3,6 +3,8 @@ import com.rabbitmq.client.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
@@ -34,10 +36,13 @@ public class RabbitManager {
     private Connection connection;
     private Channel channel;
     
+    private RabbitTemplate rabbitTemplate;
+    
     @Autowired 
     private AutowireCapableBeanFactory beanFactory;
 
-    public RabbitManager() {
+    public RabbitManager(RabbitTemplate rabbitTemplate) {
+    	this.rabbitTemplate = rabbitTemplate; 	
     }
 
     /**
@@ -121,62 +126,20 @@ public class RabbitManager {
         }
     }
     
-    /**
-     * Method used to send message via RPC (Remote Procedure Call) pattern.
-     * In this implementation it covers asynchronous Rabbit communication with synchronous one, as it is used by conventional REST facade.
-     * Before sending a message, a temporary response queue is declared and its name is passed along with the message.
-     * When a consumer handles the message, it returns the result via the response queue.
-     * Since this is a synchronous pattern, it uses timeout of 20 seconds. If the response doesn't come in that time, the method returns with null result.
-     *
-     * @param exchangeName name of the exchange to send message to
-     * @param routingKey   routing key to send message to
-     * @param message      message to be sent
-     * @return response from the consumer or null if timeout occurs
-     */
-    public String sendRpcMessage(String exchangeName, String routingKey, String message) {
-        try {
-            log.info("Sending RPC message: " + message);
+    public Object sendRpcMessage(String exchange, String routingKey, Object obj) {
+        log.info("Sending RPC message");
 
-            this.channel = this.connection.createChannel();
-            
-            String replyQueueName = "amq.rabbitmq.reply-to";
-
-            String correlationId = UUID.randomUUID().toString();
-            AMQP.BasicProperties props = new AMQP.BasicProperties()
-                    .builder()
-                    .correlationId(correlationId)
-                    .replyTo(replyQueueName)
-                    .build();
-
-            QueueingConsumer consumer = new QueueingConsumer(this.channel);
-            
-            this.channel.basicConsume(replyQueueName, true, consumer);
-
-            String responseMsg = null;
-
-            this.channel.basicPublish(exchangeName, routingKey, props, message.getBytes());
-            
-            while (true) {
-                QueueingConsumer.Delivery delivery = consumer.nextDelivery(20000);
-                if (delivery == null) {
-                    log.info("Timeout in response retrieval");
-                    return null;
-                }
-
-                if (delivery.getProperties().getCorrelationId().equals(correlationId)) {
-                    log.info("Correct correlationID in response message");
-                    responseMsg = new String(delivery.getBody());
-                    break;
-                }
-            }
-
-            log.info("Response received: " + responseMsg);
-            return responseMsg;
-        } catch (IOException | InterruptedException e) {
-            log.error(e.getMessage(), e);
+        String correlationId = UUID.randomUUID().toString();
+        rabbitTemplate.setReplyTimeout(5000);
+        Object receivedObj = rabbitTemplate.convertSendAndReceive(exchange, routingKey, obj, new CorrelationData(correlationId));
+        if(receivedObj == null) {
+            log.info("Timeout in RPC receiving response");
+            return null;
         }
-        closeChannel(this.channel);
-        return null;
+
+        log.info("RPC Response received obj: " + receivedObj);
+
+        return receivedObj;
     }
 
     /**

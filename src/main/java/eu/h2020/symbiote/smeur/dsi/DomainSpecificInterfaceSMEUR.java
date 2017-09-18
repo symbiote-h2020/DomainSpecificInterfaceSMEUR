@@ -1,4 +1,4 @@
-package eu.h2020.symbiote.smeur.dsi;
+	package eu.h2020.symbiote.smeur.dsi;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -13,7 +13,7 @@ import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 /**
  * @author RuggenthalerC
  *
- *         Main entry point to start spring boot application.
+ * Main entry point to start spring boot application.
  */
 @EnableDiscoveryClient    
 @EnableAutoConfiguration

@@ -1,16 +1,35 @@
 package eu.h2020.symbiote.smeur.dsi.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import eu.h2020.symbiote.cloud.model.data.parameter.InputParameter;
+import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMessage;
+import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
+import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
+
 /**
- * DomainSpecificInterface-SMEUR rest interface
+ * DomainSpecificInterface-SMEUR rest interface.
  * Created by Petar Krivic on 28/08/2017.
  */
 @RestController
 public class PoiRestController {
+	
+	String poiExchangeName = "symbIoTe.enablerLogicPoi";
+	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
+	
+	@Autowired
+	RabbitManager rabbitManager;
 	
 	/**
 	 * Method parses and forwards received request to EL-PoI component,
@@ -36,22 +55,46 @@ public class PoiRestController {
 	 * @param r (in km)
 	 * @param amenity
 	 * @return searched amenities in specified area
+	 * @throws JsonProcessingException 
 	 */
 	@RequestMapping(value="/smeur/poi", method=RequestMethod.GET)
     public String poiLatLon(@RequestParam(value="lat") double lat,
     		@RequestParam(value="lon") double lon,
     		@RequestParam(value="r") double r,
-    		@RequestParam(value="amenity") String amenity) {
+    		@RequestParam(value="amenity") String amenity) throws JsonProcessingException {
 		
-		double northBound = lat + ((1/111)*r);
-		double southBound = lat - ((1/111)*r);
-		
-		double eastBound = lon + ((1/(111*(Math.cos(Math.toRadians(lat)))))*r);
-		double westBound = lon - ((1/(111*Math.cos(Math.toRadians(lat))))*r);
-		
+		//PoiSearchRequest poiRequest = new PoiSearchRequest(lat, lon, r, amenity);
 		//send RMQ-rpc message to el-poi and return response
+		//String test = (String) rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, poiRequest);
 		
-        return "result";
+		ObjectMapper om = new ObjectMapper();
+		
+		ResourceInfo ri = new ResourceInfo();
+		ri.setInternalId("23");
+		
+		//prepare InputParameters for PoI request
+		InputParameter latitude = new InputParameter("latitude");
+		latitude.setValue(String.valueOf(lat));
+		InputParameter longitude = new InputParameter("longitude");
+		longitude.setValue(String.valueOf(lon));
+		InputParameter radius = new InputParameter("radius");
+		radius.setValue(String.valueOf(r));
+		InputParameter amenit = new InputParameter("amenity");
+		amenit.setValue(String.valueOf(amenity));
+		
+		List<ResourceInfo> l = new ArrayList<ResourceInfo>();
+		l.add(ri);
+		List<InputParameter> l1 = new ArrayList<InputParameter>();
+		l1.add(latitude);
+		l1.add(longitude);
+		l1.add(radius);
+		l1.add(amenit);
+		ResourceAccessSetMessage rasm = new ResourceAccessSetMessage(l, om.writeValueAsString(l1));
+
+		Object k = rabbitManager.sendRpcMessage("plugin-exchange", "EnablerLogicPoISearch.set", om.writeValueAsString(rasm));
+		// TODO testing phase (implementation of receiving answer)
+		System.out.println(new String((byte[]) k, StandardCharsets.UTF_8));
+        return new String((byte[]) k, StandardCharsets.UTF_8);
     }
 
 }
