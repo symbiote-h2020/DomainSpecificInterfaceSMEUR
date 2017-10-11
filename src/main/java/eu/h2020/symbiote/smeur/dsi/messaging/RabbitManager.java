@@ -130,7 +130,7 @@ public class RabbitManager {
         log.info("Sending RPC message");
 
         String correlationId = UUID.randomUUID().toString();
-        rabbitTemplate.setReplyTimeout(10000);
+        rabbitTemplate.setReplyTimeout(30000);
         Object receivedObj = rabbitTemplate.convertSendAndReceive(exchange, routingKey, obj, new CorrelationData(correlationId));
         if(receivedObj == null) {
             log.info("Timeout in RPC receiving response");
