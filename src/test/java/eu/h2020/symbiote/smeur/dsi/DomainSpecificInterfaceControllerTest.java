@@ -25,7 +25,6 @@ public class DomainSpecificInterfaceControllerTest {
 
 	@Before
 	public void setUp() throws Exception {
-
 		MockitoAnnotations.initMocks(this);
 	}
 
@@ -42,5 +41,20 @@ public class DomainSpecificInterfaceControllerTest {
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
 				.thenReturn("dummyStringResponse".getBytes());
 		assertNotNull(poiRest.poiLatLon(15.2133, 40.32131, 23, "hospital"));
+	}
+
+	@Test
+	public void testInterpolatorReturnNull() throws JsonProcessingException {
+
+		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
+		assertNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
+	}
+
+	@Test
+	public void testInterpolatorReturnNotNull() throws JsonProcessingException {
+
+		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
+				.thenReturn("dummyStringResponse".getBytes());
+		assertNotNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
 	}
 }

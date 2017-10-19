@@ -141,8 +141,13 @@ public class PoiRestController {
 		// TODO exchange name, routing key
 		Object k = rabbitManager.sendRpcMessage("?", "?", om.writeValueAsString(request));
 
-		System.out.println(new String((byte[]) k, StandardCharsets.UTF_8));
-		return new String((byte[]) k, StandardCharsets.UTF_8);
+		try {
+			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
+			return new String((byte[]) k, StandardCharsets.UTF_8);
+		} catch (NullPointerException e) {
+			log.info("Interpolator returned null!");
+			return null;
+		}
 	}
 
 }
