@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,12 +23,13 @@ import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
 
 /**
- * DomainSpecificInterface-SMEUR rest interface.
- * Created by Petar Krivic on
+ * DomainSpecificInterface-SMEUR rest interface. Created by Petar Krivic on
  * 28/08/2017.
  */
 @RestController
 public class PoiRestController {
+
+	private static final Logger log = LoggerFactory.getLogger(PoiRestController.class);
 
 	String poiExchangeName = "symbIoTe.enablerLogicPoi";
 	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
@@ -53,9 +56,11 @@ public class PoiRestController {
 	/**
 	 * Method parses and forwards received request to EL-PoI component, and
 	 * returns the received result back to user.
+	 * 
 	 * @param lat
 	 * @param lon
-	 * @param r (in km)
+	 * @param r
+	 *            (in km)
 	 * @param amenity
 	 * @return searched amenities in specified area
 	 * @throws JsonProcessingException
@@ -91,9 +96,16 @@ public class PoiRestController {
 
 		Object k = rabbitManager.sendRpcMessage("plugin-exchange", "EnablerLogicPoISearch.set",
 				om.writeValueAsString(rasm));
+
 		// TODO testing phase (implementation of receiving answer)
-		System.out.println(new String((byte[]) k, StandardCharsets.UTF_8));
-		return new String((byte[]) k, StandardCharsets.UTF_8);
+		try {
+			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
+			return new String((byte[]) k, StandardCharsets.UTF_8);
+		} catch (NullPointerException e) {
+			log.info("Interpolator returned null!");
+			return null;
+		}
+
 	}
 
 	/**
