@@ -34,7 +34,6 @@ public class RabbitManager {
 	private String rabbitPassword;
 
 	private Connection connection;
-
 	private RabbitTemplate rabbitTemplate;
 
 	public RabbitManager(RabbitTemplate rabbitTemplate) {

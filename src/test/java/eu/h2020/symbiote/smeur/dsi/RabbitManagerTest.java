@@ -44,7 +44,7 @@ public class RabbitManagerTest {
 	}
 
 	@Test
-	public void sendRpcMessageWithObjectNullReceived() throws Exception {
+	public void sendRpcMessageWithObject_NullReceived() throws Exception {
 		// given
 		String exchange = "e";
 		String key = "k";
@@ -58,7 +58,7 @@ public class RabbitManagerTest {
 	}
 
 	@Test
-	public void sendRpcMessageWithObjectNResponseReceived() throws Exception {
+	public void sendRpcMessageWithObject_ResponseReceived() throws Exception {
 		// given
 		String exchange = "e";
 		String key = "k";

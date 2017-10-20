@@ -27,31 +27,21 @@ import eu.h2020.symbiote.smeur.messages.GrcRequest;
  * 28/08/2017.
  */
 @RestController
-public class PoiRestController {
+public class DomainSpecificInterfaceRestController {
 
-	private static final Logger log = LoggerFactory.getLogger(PoiRestController.class);
+	private static final Logger log = LoggerFactory.getLogger(DomainSpecificInterfaceRestController.class);
 
 	String poiExchangeName = "symbIoTe.enablerLogicPoi";
 	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
+	
+	//TODO
+//	String GrcExchangeKey = "";
+//	String GrcRoutingKey = "";
+//	String InterpolatorExchangeKey = "";
+//	String InterpolatorRoutingKey = "";
 
 	@Autowired
 	RabbitManager rabbitManager;
-
-	/**
-	 * Method parses and forwards received request to EL-PoI component, and
-	 * returns the received result back to user.
-	 * 
-	 * @param city
-	 * @param amenity
-	 * @return searched amenities in the queried city
-	 */
-	@RequestMapping(value = "/smeur/poi/city", method = RequestMethod.GET)
-	public String poiCity(@RequestParam(value = "city") String city, @RequestParam(value = "amenity") String amenity) {
-
-		// send RMQ-rpc message to el-poi and return response
-
-		return "result";
-	}
 
 	/**
 	 * Method parses and forwards received request to EL-PoI component, and
@@ -75,7 +65,7 @@ public class PoiRestController {
 		ResourceInfo ri = new ResourceInfo();
 		ri.setInternalId("23");
 
-		// prepare InputParameters for PoI request
+		// prepare received InputParameters for PoI request
 		InputParameter latitude = new InputParameter("latitude");
 		latitude.setValue(String.valueOf(lat));
 		InputParameter longitude = new InputParameter("longitude");
@@ -138,6 +128,7 @@ public class PoiRestController {
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
 		// send RMQ-rpc message to el-grc and return response
 		ObjectMapper om = new ObjectMapper();
+
 		// TODO exchange name, routing key
 		Object k = rabbitManager.sendRpcMessage("?", "?", om.writeValueAsString(request));
 
@@ -149,5 +140,7 @@ public class PoiRestController {
 			return null;
 		}
 	}
+	
+	//TODO DSI-Interpolator communication
 
 }

@@ -12,7 +12,7 @@ import org.mockito.MockitoAnnotations;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-import eu.h2020.symbiote.smeur.dsi.controller.PoiRestController;
+import eu.h2020.symbiote.smeur.dsi.controller.DomainSpecificInterfaceRestController;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 
 public class DomainSpecificInterfaceControllerTest {
@@ -21,7 +21,7 @@ public class DomainSpecificInterfaceControllerTest {
 	RabbitManager rm;
 
 	@InjectMocks
-	PoiRestController poiRest;
+	DomainSpecificInterfaceRestController poiRest;
 
 	@Before
 	public void setUp() throws Exception {
@@ -29,14 +29,14 @@ public class DomainSpecificInterfaceControllerTest {
 	}
 
 	@Test
-	public void testPoiSearchLatLon() throws JsonProcessingException {
+	public void testPoiSearchLatLon_nullReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
 		assertNull(poiRest.poiLatLon(15.2133, 40.32131, 23, "hospital"));
 	}
 
 	@Test
-	public void testPoiSearchLatLonNotNull() throws JsonProcessingException {
+	public void testPoiSearchLatLon_responseReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
 				.thenReturn("dummyStringResponse".getBytes());
@@ -44,14 +44,14 @@ public class DomainSpecificInterfaceControllerTest {
 	}
 
 	@Test
-	public void testInterpolatorReturnNull() throws JsonProcessingException {
+	public void testGrc_nullReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
 		assertNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
 	}
 
 	@Test
-	public void testInterpolatorReturnNotNull() throws JsonProcessingException {
+	public void testGrc_responseReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
 				.thenReturn("dummyStringResponse".getBytes());
