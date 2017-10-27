@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import eu.h2020.symbiote.cloud.model.data.observation.Location;
-import eu.h2020.symbiote.cloud.model.data.parameter.InputParameter;
+import eu.h2020.symbiote.cloud.model.data.InputParameter;
 import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMessage;
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
+import eu.h2020.symbiote.model.cim.Location;
+import eu.h2020.symbiote.model.cim.WGS84Location;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
 
@@ -49,8 +50,7 @@ public class DomainSpecificInterfaceRestController {
 	 * 
 	 * @param lat
 	 * @param lon
-	 * @param r
-	 *            (in km)
+	 * @param r(in km)
 	 * @param amenity
 	 * @return searched amenities in specified area
 	 * @throws JsonProcessingException
@@ -118,12 +118,8 @@ public class DomainSpecificInterfaceRestController {
 			@RequestParam(value = "optimisation") String optimisation) throws JsonProcessingException {
 
 		// create locations
-		Location from = new Location();
-		from.setLatitude(fromLat);
-		from.setLongitude(fromLon);
-		Location to = new Location();
-		to.setLatitude(toLat);
-		to.setLongitude(toLon);
+		WGS84Location from = new WGS84Location(fromLon, fromLat, 0, null, null);
+		WGS84Location to = new WGS84Location(toLon, toLat, 0, null, null);
 		// create request
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
 		// send RMQ-rpc message to el-grc and return response
