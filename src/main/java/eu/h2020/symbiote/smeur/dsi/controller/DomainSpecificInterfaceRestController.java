@@ -34,12 +34,6 @@ public class DomainSpecificInterfaceRestController {
 
 	String poiExchangeName = "symbIoTe.enablerLogicPoi";
 	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
-	
-	//TODO
-//	String GrcExchangeKey = "";
-//	String GrcRoutingKey = "";
-//	String InterpolatorExchangeKey = "";
-//	String InterpolatorRoutingKey = "";
 
 	@Autowired
 	RabbitManager rabbitManager;
@@ -126,7 +120,7 @@ public class DomainSpecificInterfaceRestController {
 		ObjectMapper om = new ObjectMapper();
 
 		// TODO exchange name, routing key
-		Object k = rabbitManager.sendRpcMessage("?", "?", om.writeValueAsString(request));
+		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", om.writeValueAsString(request));
 
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
