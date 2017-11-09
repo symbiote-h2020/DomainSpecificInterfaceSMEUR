@@ -6,6 +6,9 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,7 +36,7 @@ public class DomainSpecificInterfaceRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(DomainSpecificInterfaceRestController.class);
 
-	private MessageConverter messageConverter;
+	private MessageConverter messageConverter = new Jackson2JsonMessageConverter();
 	String poiExchangeName = "symbIoTe.enablerLogicPoi";
 	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
 
@@ -118,11 +121,8 @@ public class DomainSpecificInterfaceRestController {
 		WGS84Location to = new WGS84Location(toLon, toLat, 0, null, null);
 		// create request
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
-		// send RMQ-rpc message to el-grc and return response
 		
-		//ObjectMapper om = new ObjectMapper();
-		//Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", om.writeValueAsString(request));
-		
+		// send RMQ-rpc message to el-grc and return response		
 		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", messageConverter.toMessage(request, null));
 
 		try {
