@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,6 +33,7 @@ public class DomainSpecificInterfaceRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(DomainSpecificInterfaceRestController.class);
 
+	private MessageConverter messageConverter;
 	String poiExchangeName = "symbIoTe.enablerLogicPoi";
 	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
 
@@ -120,7 +122,8 @@ public class DomainSpecificInterfaceRestController {
 		
 		//ObjectMapper om = new ObjectMapper();
 		//Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", om.writeValueAsString(request));
-		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", request);
+		
+		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", messageConverter.toMessage(request, null));
 
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
