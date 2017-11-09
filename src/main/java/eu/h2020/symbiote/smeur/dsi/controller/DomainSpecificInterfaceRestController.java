@@ -117,10 +117,10 @@ public class DomainSpecificInterfaceRestController {
 		// create request
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
 		// send RMQ-rpc message to el-grc and return response
-		ObjectMapper om = new ObjectMapper();
-
-		// TODO exchange name, routing key
-		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", om.writeValueAsString(request));
+		
+		//ObjectMapper om = new ObjectMapper();
+		//Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", om.writeValueAsString(request));
+		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", request);
 
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
