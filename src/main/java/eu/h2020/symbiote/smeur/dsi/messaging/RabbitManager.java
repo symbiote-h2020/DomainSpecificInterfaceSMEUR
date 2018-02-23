@@ -1,11 +1,15 @@
 package eu.h2020.symbiote.smeur.dsi.messaging;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.rabbitmq.client.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.support.CorrelationData;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.SimpleMessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -106,6 +110,27 @@ public class RabbitManager {
 
 		log.info("RPC Response received obj: " + receivedObj);
 
+		return receivedObj;
+	}
+	
+	public Object sendRpcMessageJSON(String exchange, String routingKey, Object obj) {
+		log.info("Sending RPC message");
+
+		String correlationId = UUID.randomUUID().toString();
+		rabbitTemplate.setReplyTimeout(30000);
+		ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		Jackson2JsonMessageConverter messageConverter = new Jackson2JsonMessageConverter(mapper);
+        rabbitTemplate.setMessageConverter(messageConverter);
+		Object receivedObj = rabbitTemplate.convertSendAndReceive(exchange, routingKey, obj,
+				new CorrelationData(correlationId));
+		if (receivedObj == null) {
+			log.info("Received null or Timeout!");
+			return null;
+		}
+		
+		log.info("RPC Response received obj: " + receivedObj);
+		rabbitTemplate.setMessageConverter(new SimpleMessageConverter()); //set theSimpleMessageConverter again
 		return receivedObj;
 	}
 

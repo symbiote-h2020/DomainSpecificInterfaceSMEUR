@@ -2,8 +2,14 @@ package eu.h2020.symbiote.smeur.dsi.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.Message;
@@ -11,6 +17,9 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +35,8 @@ import eu.h2020.symbiote.model.cim.Location;
 import eu.h2020.symbiote.model.cim.WGS84Location;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
+import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
+import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 /**
  * DomainSpecificInterface-SMEUR rest interface. Created by Petar Krivic on
@@ -49,7 +60,8 @@ public class DomainSpecificInterfaceRestController {
 	 * 
 	 * @param lat
 	 * @param lon
-	 * @param r(in km)
+	 * @param r(in
+	 *            km)
 	 * @param amenity
 	 * @return searched amenities in specified area
 	 * @throws JsonProcessingException
@@ -121,9 +133,11 @@ public class DomainSpecificInterfaceRestController {
 		WGS84Location to = new WGS84Location(toLon, toLat, 0, null, null);
 		// create request
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
-		
-		// send RMQ-rpc message to el-grc and return response		
-		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController", messageConverter.toMessage(request, null));
+
+		// send RMQ-rpc message to el-grc and return response
+		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic",
+				"symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController",
+				messageConverter.toMessage(request, null));
 
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
@@ -133,7 +147,40 @@ public class DomainSpecificInterfaceRestController {
 			return null;
 		}
 	}
-	
-	//TODO DSI-Interpolator communication
+
+	// TODO DSI-Interpolator communication
+	@RequestMapping(value = "/smeur/interpolation", method = RequestMethod.POST, headers = "Accept=application/json")
+	public ResponseEntity interpolatorRequest(@RequestBody String jsonString) throws JsonProcessingException {
+		log.info(jsonString);
+		Map<String, WGS84Location> locations = new HashMap<String, WGS84Location>();
+		try {
+			JSONArray array = new JSONArray(jsonString);
+			for (int i = 0; i < array.length(); i++) {
+				JSONObject entry = array.getJSONObject(i);
+				log.info("latitude is " + entry.getDouble("latitude") + " and longitude is "
+						+ entry.getDouble("longitude"));
+				// for every object create new wgs84location and put it to a map
+				WGS84Location location = new WGS84Location(entry.getDouble("latitude"), entry.getDouble("longitude"), 0,
+						null, null);
+				locations.put(UUID.randomUUID().toString(), location);
+			}
+			
+			QueryPoiInterpolatedValues qiv = new QueryPoiInterpolatedValues(locations);
+			//send to interpolator and return response to user
+//			QueryPoiInterpolatedValuesResponse response = (QueryPoiInterpolatedValuesResponse) rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicInterpolator",
+//					qiv);
+			
+			ObjectMapper om = new ObjectMapper();
+			Object response = rabbitManager.sendRpcMessageJSON("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicInterpolator",
+					qiv);
+			log.info("Received from interpolator: " + response.toString());
+			
+			// TODO format received interpolated data to location
+			return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+		} catch (JSONException e) {
+			log.info("Bad JSON received!");
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+	}
 
 }
