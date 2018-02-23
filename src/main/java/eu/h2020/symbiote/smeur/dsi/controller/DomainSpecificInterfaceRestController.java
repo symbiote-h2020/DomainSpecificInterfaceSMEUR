@@ -167,10 +167,6 @@ public class DomainSpecificInterfaceRestController {
 			
 			QueryPoiInterpolatedValues qiv = new QueryPoiInterpolatedValues(locations);
 			//send to interpolator and return response to user
-//			QueryPoiInterpolatedValuesResponse response = (QueryPoiInterpolatedValuesResponse) rabbitManager.sendRpcMessage("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicInterpolator",
-//					qiv);
-			
-			ObjectMapper om = new ObjectMapper();
 			Object response = rabbitManager.sendRpcMessageJSON("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicInterpolator",
 					qiv);
 			log.info("Received from interpolator: " + response.toString());
