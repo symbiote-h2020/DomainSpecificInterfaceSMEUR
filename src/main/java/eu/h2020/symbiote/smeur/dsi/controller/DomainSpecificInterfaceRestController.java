@@ -12,8 +12,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,12 +30,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.cloud.model.data.InputParameter;
 import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMessage;
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
-import eu.h2020.symbiote.model.cim.Location;
 import eu.h2020.symbiote.model.cim.WGS84Location;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
-import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 /**
  * DomainSpecificInterface-SMEUR rest interface. Created by Petar Krivic on
