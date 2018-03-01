@@ -17,6 +17,7 @@ import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,14 +43,31 @@ import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
  * DomainSpecificInterface-SMEUR rest interface. Created by Petar Krivic on
  * 28/08/2017.
  */
+/**
+ * @author petarkrivic
+ *
+ */
 @RestController
 public class DomainSpecificInterfaceRestController {
 
 	private static final Logger log = LoggerFactory.getLogger(DomainSpecificInterfaceRestController.class);
 
 	private MessageConverter messageConverter = new Jackson2JsonMessageConverter();
-	String poiExchangeName = "symbIoTe.enablerLogicPoi";
-	String poiRoutingKey = "symbiote.enablerLogic.poiSearch";
+
+	@Value("${rabbit.exchange.enablerLogic.plugin.name}")
+	private String poiExchangeName;
+
+	@Value("${rabbit.routingKey.enablerLogic.poiSearch}")
+	private String poiRoutingKey;
+
+	@Value("${rabbit.exchange.enablerLogic.name}")
+	private String enablerLogicExchange;
+
+	@Value("${rabbit.routingKey.enablerLogic.grc}")
+	private String grcRoutingKey;
+
+	@Value("${rabbit.routingKey.enablerLogic.interpolator}")
+	private String interpolatorRoutingKey;
 
 	@Autowired
 	RabbitManager rabbitManager;
@@ -60,8 +78,7 @@ public class DomainSpecificInterfaceRestController {
 	 * 
 	 * @param lat
 	 * @param lon
-	 * @param r(in
-	 *            km)
+	 * @param r(in km)
 	 * @param amenity
 	 * @return searched amenities in specified area
 	 * @throws JsonProcessingException
@@ -95,8 +112,7 @@ public class DomainSpecificInterfaceRestController {
 		l1.add(amenit);
 		ResourceAccessSetMessage rasm = new ResourceAccessSetMessage(l, om.writeValueAsString(l1));
 
-		Object k = rabbitManager.sendRpcMessage("plugin-exchange", "EnablerLogicPoISearch.set",
-				om.writeValueAsString(rasm));
+		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(rasm));
 
 		// TODO testing phase (implementation of receiving answer)
 		try {
@@ -135,8 +151,7 @@ public class DomainSpecificInterfaceRestController {
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
 
 		// send RMQ-rpc message to el-grc and return response
-		Object k = rabbitManager.sendRpcMessage("symbIoTe.enablerLogic",
-				"symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicGreenRouteController",
+		Object k = rabbitManager.sendRpcMessage(enablerLogicExchange, grcRoutingKey,
 				messageConverter.toMessage(request, null));
 
 		try {
@@ -148,7 +163,14 @@ public class DomainSpecificInterfaceRestController {
 		}
 	}
 
-	// TODO DSI-Interpolator communication
+	/**
+	 * Method forwards received request to interpolator component, and returns
+	 * received response back to user.
+	 * 
+	 * @param jsonString
+	 * @return
+	 * @throws JsonProcessingException
+	 */
 	@RequestMapping(value = "/smeur/interpolation", method = RequestMethod.POST, headers = "Accept=application/json")
 	public ResponseEntity interpolatorRequest(@RequestBody String jsonString) throws JsonProcessingException {
 		log.info(jsonString);
@@ -164,13 +186,12 @@ public class DomainSpecificInterfaceRestController {
 						null, null);
 				locations.put(UUID.randomUUID().toString(), location);
 			}
-			
+
 			QueryPoiInterpolatedValues qiv = new QueryPoiInterpolatedValues(locations);
-			//send to interpolator and return response to user
-			Object response = rabbitManager.sendRpcMessageJSON("symbIoTe.enablerLogic", "symbIoTe.enablerLogic.syncMessageToEnablerLogic.EnablerLogicInterpolator",
-					qiv);
+			// send to interpolator and return response to user
+			Object response = rabbitManager.sendRpcMessageJSON(enablerLogicExchange, interpolatorRoutingKey, qiv);
 			log.info("Received from interpolator: " + response.toString());
-			
+
 			// TODO format received interpolated data to location
 			return new ResponseEntity<>(response.toString(), HttpStatus.OK);
 		} catch (JSONException e) {
