@@ -3,9 +3,11 @@ package eu.h2020.symbiote.smeur.dsi.controller;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -30,10 +32,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.h2020.symbiote.cloud.model.data.InputParameter;
 import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMessage;
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
+import eu.h2020.symbiote.model.cim.ObservationValue;
 import eu.h2020.symbiote.model.cim.WGS84Location;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
+import eu.h2020.symbiote.smeur.messages.DomainSpecificInterfaceResponse;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
+import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 /**
  * DomainSpecificInterface-SMEUR rest interface. Created by Petar Krivic on
@@ -188,12 +193,45 @@ public class DomainSpecificInterfaceRestController {
 			Object response = rabbitManager.sendRpcMessageJSON(enablerLogicExchange, interpolatorRoutingKey, qiv);
 			log.info("Received from interpolator: " + response.toString());
 
-			// TODO format received interpolated data to location
-			return new ResponseEntity<>(response.toString(), HttpStatus.OK);
+			return new ResponseEntity<>(formatResponse(qiv,(QueryPoiInterpolatedValuesResponse) response), HttpStatus.OK);
+
 		} catch (JSONException e) {
 			log.info("Bad JSON received!");
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 	}
 
+	/**
+	 * Formatting received interpolator response to user response.
+	 * 
+	 * @param interpolatorQuery
+	 * @param interpolatorResponse
+	 * @return
+	 */
+	public List<DomainSpecificInterfaceResponse> formatResponse(QueryPoiInterpolatedValues interpolatorQuery,
+			QueryPoiInterpolatedValuesResponse interpolatorResponse) {
+
+		List<DomainSpecificInterfaceResponse> formatedResponse = new LinkedList<DomainSpecificInterfaceResponse>();
+
+		for (Entry<String, WGS84Location> entry : interpolatorQuery.thePoints.entrySet()) {
+			DomainSpecificInterfaceResponse place = new DomainSpecificInterfaceResponse();
+			place.setName(entry.getValue().getName());
+			place.setLatitude(String.valueOf(entry.getValue().getLatitude()));
+			place.setLongitude(String.valueOf(entry.getValue().getLongitude()));
+			List<ObservationValue> observations = new LinkedList<ObservationValue>();
+
+			try {
+				for (Map.Entry<String, ObservationValue> e : interpolatorResponse.theData
+						.get(entry.getKey()).interpolatedValues.entrySet()) {
+					observations.add(e.getValue());
+				}
+			} catch (NullPointerException e) {
+				log.info("Error occurred! Interpolator doesn't have any data for requested POIs.");
+			}
+
+			place.setObservation(observations);
+			formatedResponse.add(place);
+		}
+		return formatedResponse;
+	}
 }
