@@ -2,6 +2,7 @@ package eu.h2020.symbiote.smeur.dsi.controller;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -115,7 +116,6 @@ public class DomainSpecificInterfaceRestController {
 
 		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(rasm));
 
-		// TODO testing phase (implementation of receiving answer)
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
 			return new String((byte[]) k, StandardCharsets.UTF_8);
@@ -183,8 +183,8 @@ public class DomainSpecificInterfaceRestController {
 				log.info("latitude is " + entry.getDouble("latitude") + " and longitude is "
 						+ entry.getDouble("longitude"));
 				// for every object create new wgs84location and put it to a map
-				WGS84Location location = new WGS84Location(entry.getDouble("latitude"), entry.getDouble("longitude"), 0,
-						null, null);
+				WGS84Location location = new WGS84Location(entry.getDouble("longitude"), entry.getDouble("latitude"), 0,
+						"dummy", Arrays.asList("dummy"));
 				locations.put(UUID.randomUUID().toString(), location);
 			}
 
