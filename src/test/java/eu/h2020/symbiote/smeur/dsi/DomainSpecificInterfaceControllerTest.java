@@ -9,11 +9,14 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import eu.h2020.symbiote.smeur.dsi.controller.DomainSpecificInterfaceRestController;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
+import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 public class DomainSpecificInterfaceControllerTest {
 
@@ -56,5 +59,21 @@ public class DomainSpecificInterfaceControllerTest {
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
 				.thenReturn("dummyStringResponse".getBytes());
 		assertNotNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
+	}
+	
+	@Test
+	public void testInterpolator_nullReceived() throws JsonProcessingException {
+
+		when(rm.sendRpcMessageJSON(any(String.class), any(String.class), any(String.class)))
+				.thenReturn(null);
+		assertEquals(new ResponseEntity<>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR),poiRest.interpolatorRequest("[\r\n\t{\r\n\t\t\"latitude\": \"45.8092991\",\r\n\t\t\"longitude\": \"15.9878854\"\r\n\t},\r\n\t{\r\n\t\t\"latitude\": \"45.8052317\",\r\n\t\t\"longitude\": \"15.9747292\"\r\n\t}\r\n]"));
+	}
+	
+	@Test
+	public void testInterpolator_responseReceived() throws JsonProcessingException {
+
+		when(rm.sendRpcMessageJSON(any(String.class), any(String.class), any(String.class)))
+				.thenReturn(new QueryPoiInterpolatedValuesResponse());
+		assertNotNull(poiRest.interpolatorRequest("[\r\n\t{\r\n\t\t\"latitude\": \"45.8092991\",\r\n\t\t\"longitude\": \"15.9878854\"\r\n\t},\r\n\t{\r\n\t\t\"latitude\": \"45.8052317\",\r\n\t\t\"longitude\": \"15.9747292\"\r\n\t}\r\n]"));
 	}
 }

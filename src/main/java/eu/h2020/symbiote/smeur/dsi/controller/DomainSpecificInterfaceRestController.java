@@ -191,10 +191,14 @@ public class DomainSpecificInterfaceRestController {
 			QueryPoiInterpolatedValues qiv = new QueryPoiInterpolatedValues(locations);
 			// send to interpolator and return response to user
 			Object response = rabbitManager.sendRpcMessageJSON(enablerLogicExchange, interpolatorRoutingKey, qiv);
+			try{
 			log.info("Received from interpolator: " + response.toString());
 
 			return new ResponseEntity<>(formatResponse(qiv,(QueryPoiInterpolatedValuesResponse) response), HttpStatus.OK);
-
+			} catch (NullPointerException ex){
+				log.info("Interpolator returned null!");
+				return new ResponseEntity<>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR);
+			}
 		} catch (JSONException e) {
 			log.info("Bad JSON received!");
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

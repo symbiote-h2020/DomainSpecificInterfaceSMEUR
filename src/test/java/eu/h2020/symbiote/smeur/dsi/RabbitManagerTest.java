@@ -15,6 +15,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
+import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
 
 public class RabbitManagerTest {
 
@@ -69,5 +70,19 @@ public class RabbitManagerTest {
 				.thenReturn("dummyResponse");
 
 		assertEquals("dummyResponse", rabbitManager.sendRpcMessage(exchange, key, obj));
+	}
+	
+	@Test
+	public void sendRpcMessageWithObjectJSON_ResponseReceived() throws Exception {
+		// given
+		String exchange = "e";
+		String key = "k";
+		QueryPoiInterpolatedValues qiv = new QueryPoiInterpolatedValues();
+
+		// when
+		when(rabbitTemplate.convertSendAndReceive(eq(exchange), eq(key), eq(qiv), any(CorrelationData.class)))
+				.thenReturn("dummyResponse");
+
+		assertEquals("dummyResponse", rabbitManager.sendRpcMessageJSON(exchange, key, qiv));
 	}
 }
