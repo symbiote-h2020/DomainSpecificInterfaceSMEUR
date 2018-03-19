@@ -42,10 +42,7 @@ import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 /**
- * DomainSpecificInterface-SMEUR rest interface. Created by Petar Krivic on
- * 28/08/2017.
- */
-/**
+ * DomainSpecificInterface-SMEUR rest interface.
  * @author petarkrivic
  *
  */
@@ -86,7 +83,7 @@ public class DomainSpecificInterfaceRestController {
 	 * @throws JsonProcessingException
 	 */
 	@RequestMapping(value = "/smeur/poi", method = RequestMethod.GET)
-	public String poiLatLon(@RequestParam(value = "lat") double lat, @RequestParam(value = "lon") double lon,
+	public ResponseEntity<?> poiLatLon(@RequestParam(value = "lat") double lat, @RequestParam(value = "lon") double lon,
 			@RequestParam(value = "r") double r, @RequestParam(value = "amenity") String amenity)
 			throws JsonProcessingException {
 
@@ -118,10 +115,10 @@ public class DomainSpecificInterfaceRestController {
 
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
-			return new String((byte[]) k, StandardCharsets.UTF_8);
+			return new ResponseEntity<String>(new String((byte[]) k, StandardCharsets.UTF_8), HttpStatus.OK);
 		} catch (NullPointerException e) {
 			log.info("Interpolator returned null!");
-			return null;
+			return new ResponseEntity<String>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
 	}
@@ -140,7 +137,7 @@ public class DomainSpecificInterfaceRestController {
 	 * @throws JsonProcessingException
 	 */
 	@RequestMapping(value = "/smeur/grc", method = RequestMethod.GET)
-	public String grcRequest(@RequestParam(value = "fromLat") double fromLat,
+	public ResponseEntity<?> grcRequest(@RequestParam(value = "fromLat") double fromLat,
 			@RequestParam(value = "fromLon") double fromLon, @RequestParam(value = "toLat") double toLat,
 			@RequestParam(value = "toLon") double toLon, @RequestParam(value = "transport") String transport,
 			@RequestParam(value = "optimisation") String optimisation) throws JsonProcessingException {
@@ -157,10 +154,10 @@ public class DomainSpecificInterfaceRestController {
 
 		try {
 			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
-			return new String((byte[]) k, StandardCharsets.UTF_8);
+			return new ResponseEntity<String>(new String((byte[]) k, StandardCharsets.UTF_8), HttpStatus.OK);
 		} catch (NullPointerException e) {
 			log.info("Interpolator returned null!");
-			return null;
+			return new ResponseEntity<String>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -173,7 +170,7 @@ public class DomainSpecificInterfaceRestController {
 	 * @throws JsonProcessingException
 	 */
 	@RequestMapping(value = "/smeur/interpolation", method = RequestMethod.POST, headers = "Accept=application/json")
-	public ResponseEntity interpolatorRequest(@RequestBody String jsonString) throws JsonProcessingException {
+	public ResponseEntity<?> interpolatorRequest(@RequestBody String jsonString) throws JsonProcessingException {
 		log.info(jsonString);
 		Map<String, WGS84Location> locations = new HashMap<String, WGS84Location>();
 		try {

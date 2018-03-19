@@ -32,10 +32,10 @@ public class DomainSpecificInterfaceControllerTest {
 	}
 
 	@Test
-	public void testPoiSearchLatLon_nullReceived() throws JsonProcessingException {
+	public void testPoiSearchLatLon_interpolatorError() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
-		assertNull(poiRest.poiLatLon(15.2133, 40.32131, 23, "hospital"));
+		assertEquals(new ResponseEntity<String>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR), poiRest.poiLatLon(15.2133, 40.32131, 23, "hospital"));
 	}
 
 	@Test
@@ -47,10 +47,10 @@ public class DomainSpecificInterfaceControllerTest {
 	}
 
 	@Test
-	public void testGrc_nullReceived() throws JsonProcessingException {
+	public void testGrc_interpolatorError() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
-		assertNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
+		assertEquals(new ResponseEntity<String>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR), poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
 	}
 
 	@Test
