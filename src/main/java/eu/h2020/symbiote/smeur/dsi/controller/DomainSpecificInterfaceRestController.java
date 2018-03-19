@@ -43,6 +43,7 @@ import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 /**
  * DomainSpecificInterface-SMEUR rest interface.
+ * 
  * @author petarkrivic
  *
  */
@@ -77,7 +78,8 @@ public class DomainSpecificInterfaceRestController {
 	 * 
 	 * @param lat
 	 * @param lon
-	 * @param r(in km)
+	 * @param r(in
+	 *            km)
 	 * @param amenity
 	 * @return searched amenities in specified area
 	 * @throws JsonProcessingException
@@ -188,13 +190,14 @@ public class DomainSpecificInterfaceRestController {
 			QueryPoiInterpolatedValues qiv = new QueryPoiInterpolatedValues(locations);
 			// send to interpolator and return response to user
 			Object response = rabbitManager.sendRpcMessageJSON(enablerLogicExchange, interpolatorRoutingKey, qiv);
-			try{
-			log.info("Received from interpolator: " + response.toString());
+			try {
+				log.info("Received from interpolator: " + response.toString());
 
-			return new ResponseEntity<>(formatResponse(qiv,(QueryPoiInterpolatedValuesResponse) response), HttpStatus.OK);
-			} catch (NullPointerException ex){
+				return new ResponseEntity<>(formatResponse(qiv, (QueryPoiInterpolatedValuesResponse) response),
+						HttpStatus.OK);
+			} catch (NullPointerException ex) {
 				log.info("Interpolator returned null!");
-				return new ResponseEntity<>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR);
+				return new ResponseEntity<>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
 			}
 		} catch (JSONException e) {
 			log.info("Bad JSON received!");

@@ -10,11 +10,6 @@ import org.springframework.stereotype.Component;
 
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 
-/**
- * @author RuggenthalerC
- *
- * Main entry point to start spring boot application.
- */
 @EnableDiscoveryClient    
 @EnableAutoConfiguration
 @SpringBootApplication

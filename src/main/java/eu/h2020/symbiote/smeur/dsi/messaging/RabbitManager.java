@@ -84,8 +84,7 @@ public class RabbitManager {
 	 */
 	@PreDestroy
 	public void cleanup() {
-		// FIXME check if there is better exception handling in @predestroy
-		// method
+
 		log.info("Rabbit cleaned!");
 		try {
 			if (this.connection != null && this.connection.isOpen()) {
@@ -112,25 +111,25 @@ public class RabbitManager {
 
 		return receivedObj;
 	}
-	
+
 	public Object sendRpcMessageJSON(String exchange, String routingKey, Object obj) {
 		log.info("Sending RPC message");
 
 		String correlationId = UUID.randomUUID().toString();
 		rabbitTemplate.setReplyTimeout(60000);
 		ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 		Jackson2JsonMessageConverter messageConverter = new Jackson2JsonMessageConverter(mapper);
-        rabbitTemplate.setMessageConverter(messageConverter);
+		rabbitTemplate.setMessageConverter(messageConverter);
 		Object receivedObj = rabbitTemplate.convertSendAndReceive(exchange, routingKey, obj,
 				new CorrelationData(correlationId));
 		if (receivedObj == null) {
 			log.info("Received null or Timeout!");
 			return null;
 		}
-		
+
 		log.info("RPC Response received obj: " + receivedObj);
-		rabbitTemplate.setMessageConverter(new SimpleMessageConverter()); //set theSimpleMessageConverter again
+		rabbitTemplate.setMessageConverter(new SimpleMessageConverter()); // set theSimpleMessageConverter again
 		return receivedObj;
 	}
 
