@@ -1,5 +1,6 @@
 package eu.h2020.symbiote.smeur.dsi.controller;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,6 +20,7 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,6 +33,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import eu.h2020.symbiote.cloud.model.data.InputParameter;
+import eu.h2020.symbiote.cloud.model.data.Result;
 import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMessage;
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
 import eu.h2020.symbiote.model.cim.ObservationValue;
@@ -103,7 +106,7 @@ public class DomainSpecificInterfaceRestController {
 		radius.setValue(String.valueOf(r));
 		InputParameter amenit = new InputParameter("amenity");
 		amenit.setValue(String.valueOf(amenity));
-
+		
 		List<ResourceInfo> l = new ArrayList<ResourceInfo>();
 		l.add(ri);
 		List<InputParameter> l1 = new ArrayList<InputParameter>();
@@ -114,11 +117,26 @@ public class DomainSpecificInterfaceRestController {
 		ResourceAccessSetMessage rasm = new ResourceAccessSetMessage(l, om.writeValueAsString(l1));
 
 		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(rasm));
-
+		
 		try {
-			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
-			return new ResponseEntity<String>(new String((byte[]) k, StandardCharsets.UTF_8), HttpStatus.OK);
-		} catch (NullPointerException e) {
+			Result result = om.readValue((byte[])k, Result.class);
+			
+			log.info("received resultfrom PoI service: "+result.getValue().toString());
+			
+			HttpHeaders headers = new HttpHeaders();
+			headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
+			
+			ResponseEntity re = ResponseEntity.ok()
+            .headers(headers)
+            .body(result.getValue());
+			
+			return re;
+		} catch (IOException e1) {
+			log.info("Error reading value from received PoI response!");
+			e1.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		catch (NullPointerException e) {
 			log.info("Interpolator returned null!");
 			return new ResponseEntity<String>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
