@@ -99,7 +99,7 @@ public class RabbitManager {
 		log.info("Sending RPC message");
 
 		String correlationId = UUID.randomUUID().toString();
-		rabbitTemplate.setReplyTimeout(30000);
+		rabbitTemplate.setReplyTimeout(60000);
 		Object receivedObj = rabbitTemplate.convertSendAndReceive(exchange, routingKey, obj,
 				new CorrelationData(correlationId));
 		if (receivedObj == null) {
@@ -116,7 +116,7 @@ public class RabbitManager {
 		log.info("Sending RPC message");
 
 		String correlationId = UUID.randomUUID().toString();
-		rabbitTemplate.setReplyTimeout(30000);
+		rabbitTemplate.setReplyTimeout(60000);
 		ObjectMapper mapper = new ObjectMapper();
 		mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
 		Jackson2JsonMessageConverter messageConverter = new Jackson2JsonMessageConverter(mapper);
