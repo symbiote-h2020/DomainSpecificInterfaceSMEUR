@@ -1,4 +1,4 @@
-	package eu.h2020.symbiote.smeur.dsi;
+package eu.h2020.symbiote.smeur.dsi;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
