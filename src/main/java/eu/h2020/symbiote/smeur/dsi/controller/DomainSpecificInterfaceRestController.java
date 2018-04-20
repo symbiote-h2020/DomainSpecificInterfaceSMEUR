@@ -38,6 +38,7 @@ import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMes
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
 import eu.h2020.symbiote.model.cim.ObservationValue;
 import eu.h2020.symbiote.model.cim.WGS84Location;
+import eu.h2020.symbiote.rapplugin.domain.Parameter;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.DomainSpecificInterfaceResponse;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
@@ -94,27 +95,32 @@ public class DomainSpecificInterfaceRestController {
 
 		ObjectMapper om = new ObjectMapper();
 
-		ResourceInfo ri = new ResourceInfo();
-		ri.setInternalId("23");
+		ResourceInfo resourceInfo = new ResourceInfo();
+		resourceInfo.setInternalId("23");
 
 		// prepare received InputParameters for PoI request
-		InputParameter latitude = new InputParameter("latitude");
-		latitude.setValue(String.valueOf(lat));
-		InputParameter longitude = new InputParameter("longitude");
-		longitude.setValue(String.valueOf(lon));
-		InputParameter radius = new InputParameter("radius");
-		radius.setValue(String.valueOf(r));
-		InputParameter amenit = new InputParameter("amenity");
-		amenit.setValue(String.valueOf(amenity));
+//		InputParameter latitude = new InputParameter("latitude");
+//		latitude.setValue(String.valueOf(lat));
+//		InputParameter longitude = new InputParameter("longitude");
+//		longitude.setValue(String.valueOf(lon));
+//		InputParameter radius = new InputParameter("radius");
+//		radius.setValue(String.valueOf(r));
+//		InputParameter amenit = new InputParameter("amenity");
+//		amenit.setValue(String.valueOf(amenity));
 		
-		List<ResourceInfo> l = new ArrayList<ResourceInfo>();
-		l.add(ri);
-		List<InputParameter> l1 = new ArrayList<InputParameter>();
-		l1.add(latitude);
-		l1.add(longitude);
-		l1.add(radius);
-		l1.add(amenit);
-		ResourceAccessSetMessage rasm = new ResourceAccessSetMessage(l, om.writeValueAsString(l1));
+		Parameter latitude = new Parameter("latitude", String.valueOf(lat));
+		Parameter longitude = new Parameter("longitude", String.valueOf(lon));
+		Parameter radius = new Parameter("radius", String.valueOf(r));
+		Parameter amenit = new Parameter("amenity", String.valueOf(amenity));
+		
+		List<ResourceInfo> resourceInfoList = new ArrayList<ResourceInfo>();
+		resourceInfoList.add(resourceInfo);
+		List<Parameter> parameters = new ArrayList<Parameter>();
+		parameters.add(latitude);
+		parameters.add(longitude);
+		parameters.add(radius);
+		parameters.add(amenit);
+		ResourceAccessSetMessage rasm = new ResourceAccessSetMessage(resourceInfoList, om.writeValueAsString(parameters));
 
 		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(rasm));
 		
