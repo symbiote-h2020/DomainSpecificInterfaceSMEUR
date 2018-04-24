@@ -25,7 +25,7 @@ import java.util.concurrent.TimeoutException;
  * <p>
  * Created by Petar Krivic (13.7.2017)
  */
-@Component
+@Component ("RabbitManagerDSI")
 public class RabbitManager {
 
 	private static Log log = LogFactory.getLog(RabbitManager.class);

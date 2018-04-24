@@ -25,7 +25,7 @@ public class DomainSpecificInterfaceSMEUR {
         private final RabbitManager rabbitManager;
 
         @Autowired
-        public CLR(RabbitManager rabbitManager) {
+        public CLR(RabbitManager  rabbitManager) {
             this.rabbitManager = rabbitManager;
         }
 
