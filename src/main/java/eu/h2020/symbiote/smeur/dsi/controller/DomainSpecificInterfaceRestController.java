@@ -38,6 +38,7 @@ import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMes
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
 import eu.h2020.symbiote.model.cim.ObservationValue;
 import eu.h2020.symbiote.model.cim.WGS84Location;
+import eu.h2020.symbiote.rapplugin.messaging.RapPluginOkResponse;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.DomainSpecificInterfaceResponse;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
@@ -97,7 +98,7 @@ public class DomainSpecificInterfaceRestController {
 		ResourceInfo resourceInfo = new ResourceInfo();
 		resourceInfo.setInternalId("23");
 
-//		 prepare received InputParameters for PoI request	
+		//prepare received InputParameters for PoI request	
 		JSONObject j1 = new JSONObject().put("latitude", String.valueOf(lat));
 		JSONObject j2 = new JSONObject().put("longitude", String.valueOf(lon));
 		JSONObject j3 = new JSONObject().put("radius", String.valueOf(r));
@@ -107,17 +108,17 @@ public class DomainSpecificInterfaceRestController {
 		List<ResourceInfo> resourceInfoList = new ArrayList<ResourceInfo>();
 		resourceInfoList.add(resourceInfo);
 		
-		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(new ResourceAccessSetMessage(resourceInfoList, jsonList.toString())));
+		RapPluginOkResponse receivedOK = (RapPluginOkResponse) rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(new ResourceAccessSetMessage(resourceInfoList, jsonList.toString())));
+		log.info("Received response from PoI service: " + receivedOK.getContent());
 		
 		try {
-			Result result = om.readValue((byte[])k, Result.class);
-			
-			log.info("received resultfrom PoI service: "+result.getValue().toString());
+
+			Result<?> result = om.readValue(receivedOK.getContent(), Result.class);
 			
 			HttpHeaders headers = new HttpHeaders();
 			headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
 			
-			ResponseEntity re = ResponseEntity.ok()
+			ResponseEntity<?> re = ResponseEntity.ok()
             .headers(headers)
             .body(result.getValue());
 			
