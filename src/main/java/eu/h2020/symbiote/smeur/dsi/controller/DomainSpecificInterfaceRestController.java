@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,7 +38,6 @@ import eu.h2020.symbiote.enabler.messaging.model.rap.access.ResourceAccessSetMes
 import eu.h2020.symbiote.enabler.messaging.model.rap.db.ResourceInfo;
 import eu.h2020.symbiote.model.cim.ObservationValue;
 import eu.h2020.symbiote.model.cim.WGS84Location;
-import eu.h2020.symbiote.rapplugin.domain.Parameter;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.DomainSpecificInterfaceResponse;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
@@ -98,31 +97,17 @@ public class DomainSpecificInterfaceRestController {
 		ResourceInfo resourceInfo = new ResourceInfo();
 		resourceInfo.setInternalId("23");
 
-		// prepare received InputParameters for PoI request
-//		InputParameter latitude = new InputParameter("latitude");
-//		latitude.setValue(String.valueOf(lat));
-//		InputParameter longitude = new InputParameter("longitude");
-//		longitude.setValue(String.valueOf(lon));
-//		InputParameter radius = new InputParameter("radius");
-//		radius.setValue(String.valueOf(r));
-//		InputParameter amenit = new InputParameter("amenity");
-//		amenit.setValue(String.valueOf(amenity));
-		
-		Parameter latitude = new Parameter("latitude", String.valueOf(lat));
-		Parameter longitude = new Parameter("longitude", String.valueOf(lon));
-		Parameter radius = new Parameter("radius", String.valueOf(r));
-		Parameter amenit = new Parameter("amenity", String.valueOf(amenity));
+//		 prepare received InputParameters for PoI request	
+		JSONObject j1 = new JSONObject().put("latitude", String.valueOf(lat));
+		JSONObject j2 = new JSONObject().put("longitude", String.valueOf(lon));
+		JSONObject j3 = new JSONObject().put("radius", String.valueOf(r));
+		JSONObject j4 = new JSONObject().put("amenity", String.valueOf(amenity));
+		List<JSONObject> jsonList=Arrays.asList(j1,j2,j3,j4);
 		
 		List<ResourceInfo> resourceInfoList = new ArrayList<ResourceInfo>();
 		resourceInfoList.add(resourceInfo);
-		List<Parameter> parameters = new ArrayList<Parameter>();
-		parameters.add(latitude);
-		parameters.add(longitude);
-		parameters.add(radius);
-		parameters.add(amenit);
-		ResourceAccessSetMessage rasm = new ResourceAccessSetMessage(resourceInfoList, om.writeValueAsString(parameters));
-
-		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(rasm));
+		
+		Object k = rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(new ResourceAccessSetMessage(resourceInfoList, jsonList.toString())));
 		
 		try {
 			Result result = om.readValue((byte[])k, Result.class);
