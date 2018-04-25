@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import eu.h2020.symbiote.rapplugin.messaging.RapPluginOkResponse;
 import eu.h2020.symbiote.smeur.dsi.controller.DomainSpecificInterfaceRestController;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
@@ -34,7 +35,7 @@ public class DomainSpecificInterfaceControllerTest {
 	@Test
 	public void testPoiSearchLatLon_interpolatorError() throws JsonProcessingException {
 
-		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
+		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(new RapPluginOkResponse());
 		assertEquals(new ResponseEntity<String>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR), poiRest.poiLatLon(15.2133, 40.32131, 23, "hospital"));
 	}
 
@@ -42,7 +43,7 @@ public class DomainSpecificInterfaceControllerTest {
 	public void testPoiSearchLatLon_responseReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
-				.thenReturn("dummyStringResponse".getBytes());
+				.thenReturn(new RapPluginOkResponse());
 		assertNotNull(poiRest.poiLatLon(15.2133, 40.32131, 23, "hospital"));
 	}
 
