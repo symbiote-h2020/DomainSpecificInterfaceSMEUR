@@ -42,6 +42,7 @@ import eu.h2020.symbiote.rapplugin.messaging.RapPluginOkResponse;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.DomainSpecificInterfaceResponse;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
+import eu.h2020.symbiote.smeur.messages.PoiSearchRequest;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
@@ -73,7 +74,8 @@ public class DomainSpecificInterfaceRestController {
 	@Value("${rabbit.routingKey.enablerLogic.interpolator}")
 	private String interpolatorRoutingKey;
 
-	@Autowired @Qualifier("RabbitManagerDSI")
+	@Autowired
+	@Qualifier("RabbitManagerDSI")
 	RabbitManager rabbitManager;
 
 	/**
@@ -95,40 +97,37 @@ public class DomainSpecificInterfaceRestController {
 
 		ObjectMapper om = new ObjectMapper();
 
+		// prepare resourceInfo list for ResourceAccessSetMessage
 		ResourceInfo resourceInfo = new ResourceInfo();
 		resourceInfo.setInternalId("23");
-
-		//prepare received InputParameters for PoI request	
-		JSONObject j1 = new JSONObject().put("latitude", String.valueOf(lat));
-		JSONObject j2 = new JSONObject().put("longitude", String.valueOf(lon));
-		JSONObject j3 = new JSONObject().put("radius", String.valueOf(r));
-		JSONObject j4 = new JSONObject().put("amenity", String.valueOf(amenity));
-		List<JSONObject> jsonList=Arrays.asList(j1,j2,j3,j4);
-		
 		List<ResourceInfo> resourceInfoList = new ArrayList<ResourceInfo>();
 		resourceInfoList.add(resourceInfo);
-		
-		RapPluginOkResponse receivedOK = (RapPluginOkResponse) rabbitManager.sendRpcMessage(poiExchangeName, poiRoutingKey, om.writeValueAsString(new ResourceAccessSetMessage(resourceInfoList, jsonList.toString())));
-		log.info("Received response from PoI service: " + receivedOK.getContent());
-		
-		try {
 
+		// prepare received InputParameters for PoI request
+		PoiSearchRequest poiReq = new PoiSearchRequest(lat, lon, r, amenity);
+
+		RapPluginOkResponse receivedOK = (RapPluginOkResponse) rabbitManager.sendRpcMessage(poiExchangeName,
+				poiRoutingKey, om.writeValueAsString(
+						new ResourceAccessSetMessage(resourceInfoList, om.writeValueAsString(Arrays.asList(poiReq)))));
+
+		log.info("Received response from PoI service: " + receivedOK.getContent());
+
+		try {
+			// fetch Result object from received RapPluginOkResponse
 			Result<?> result = om.readValue(receivedOK.getContent(), Result.class);
-			
+
+			// Return response to user..
 			HttpHeaders headers = new HttpHeaders();
 			headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
-			
-			ResponseEntity<?> re = ResponseEntity.ok()
-            .headers(headers)
-            .body(result.getValue());
-			
+
+			ResponseEntity<?> re = ResponseEntity.ok().headers(headers).body(result.getValue());
+
 			return re;
 		} catch (IOException e1) {
 			log.info("Error reading value from received PoI response!");
 			e1.printStackTrace();
 			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-		}
-		catch (NullPointerException e) {
+		} catch (NullPointerException e) {
 			log.info("Interpolator returned null!");
 			return new ResponseEntity<String>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
