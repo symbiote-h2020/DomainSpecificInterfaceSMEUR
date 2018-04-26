@@ -101,7 +101,7 @@ public class DomainSpecificInterfaceRestController {
 		resourceInfoList.add(resourceInfo);
 
 		// prepare received InputParameters for PoI request
-		PoiSearchRequest poiReq = new PoiSearchRequest(lat, lon, 0.5, "all");
+		PoiSearchRequest poiReq = new PoiSearchRequest(lat, lon, 2.0, "all");
 
 		RapPluginOkResponse receivedOK = (RapPluginOkResponse) rabbitManager.sendRpcMessage(poiExchangeName,
 				poiRoutingKey, om.writeValueAsString(
