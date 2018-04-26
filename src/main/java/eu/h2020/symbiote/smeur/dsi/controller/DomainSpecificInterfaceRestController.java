@@ -77,6 +77,55 @@ public class DomainSpecificInterfaceRestController {
 	@Autowired
 	@Qualifier("RabbitManagerDSI")
 	RabbitManager rabbitManager;
+	
+	
+	/**
+	 * Method parses and forwards received request to EL-PoI component for initial poi fetch in radius of 0.5 km,
+	 *  and returns the received result back to user.
+	 * 
+	 * @param lat
+	 * @param lon
+	 * @return searched amenities in specified area
+	 * @throws JsonProcessingException
+	 */
+	@RequestMapping(value = "/smeur/initpoi", method = RequestMethod.GET)
+	public ResponseEntity<?> poiLatLonInit(@RequestParam(value = "lat") double lat, @RequestParam(value = "lon") double lon)
+			throws JsonProcessingException {
+
+		ObjectMapper om = new ObjectMapper();
+
+		// prepare resourceInfo list for ResourceAccessSetMessage
+		ResourceInfo resourceInfo = new ResourceInfo();
+		resourceInfo.setInternalId("23");
+		List<ResourceInfo> resourceInfoList = new ArrayList<ResourceInfo>();
+		resourceInfoList.add(resourceInfo);
+
+		// prepare received InputParameters for PoI request
+		PoiSearchRequest poiReq = new PoiSearchRequest(lat, lon, 0.5, "all");
+
+		RapPluginOkResponse receivedOK = (RapPluginOkResponse) rabbitManager.sendRpcMessage(poiExchangeName,
+				poiRoutingKey, om.writeValueAsString(
+						new ResourceAccessSetMessage(resourceInfoList, om.writeValueAsString(Arrays.asList(poiReq)))));
+
+		log.info("Received response from PoI service: " + receivedOK.getContent());
+
+		try {
+			// fetch Result object from received RapPluginOkResponse
+			Result<?> result = om.readValue(receivedOK.getContent(), Result.class);
+
+			// Return response to user..
+			HttpHeaders headers = new HttpHeaders();
+			headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
+
+			ResponseEntity<?> re = ResponseEntity.ok().headers(headers).body(result.getValue());
+
+			return re;
+		} catch (IOException e1) {
+			log.info("Error reading value from received PoI response!");
+			e1.printStackTrace();
+			return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 
 	/**
 	 * Method parses and forwards received request to EL-PoI component, and
