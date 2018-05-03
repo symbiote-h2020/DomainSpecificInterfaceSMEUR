@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.ResourceAccessException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,9 +43,11 @@ import eu.h2020.symbiote.rapplugin.messaging.RapPluginOkResponse;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
 import eu.h2020.symbiote.smeur.messages.DomainSpecificInterfaceResponse;
 import eu.h2020.symbiote.smeur.messages.GrcRequest;
+import eu.h2020.symbiote.smeur.messages.GrcResponse;
 import eu.h2020.symbiote.smeur.messages.PoiSearchRequest;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValues;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
+import eu.h2020.symbiote.smeur.messages.RouteCommunication;
 
 /**
  * DomainSpecificInterface-SMEUR rest interface.
@@ -202,6 +205,8 @@ public class DomainSpecificInterfaceRestController {
 			@RequestParam(value = "toLon") double toLon, @RequestParam(value = "transport") String transport,
 			@RequestParam(value = "optimisation") String optimisation) throws JsonProcessingException {
 
+		ObjectMapper om = new ObjectMapper();
+		
 		// create locations
 		WGS84Location from = new WGS84Location(fromLon, fromLat, 0, null, null);
 		WGS84Location to = new WGS84Location(toLon, toLat, 0, null, null);
@@ -209,17 +214,36 @@ public class DomainSpecificInterfaceRestController {
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
 
 		// send RMQ-rpc message to el-grc and return response
-		Object k = rabbitManager.sendRpcMessage(enablerLogicExchange, grcRoutingKey,
+		GrcResponse k = (GrcResponse) rabbitManager.sendRpcMessage(enablerLogicExchange, grcRoutingKey,
 				messageConverter.toMessage(request, null));
 
 		try {
-			log.info(new String((byte[]) k, StandardCharsets.UTF_8));
-			return new ResponseEntity<String>(new String((byte[]) k, StandardCharsets.UTF_8), HttpStatus.OK);
+			log.info(om.writeValueAsString(k));
+			return new ResponseEntity<String>(om.writeValueAsString(k), HttpStatus.OK);
 		} catch (NullPointerException e) {
 			log.info("Interpolator returned null!");
 			return new ResponseEntity<String>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	@RequestMapping(value = "/smeur/route", method = RequestMethod.POST)
+	public ResponseEntity<?> grcRequest(@RequestBody String route) throws JsonProcessingException {
+
+		ObjectMapper om = new ObjectMapper();
+		RouteCommunication received;
+		
+		try {
+			received = om.readValue(route, RouteCommunication.class);		
+		} catch (IOException | ResourceAccessException e) {
+			return new ResponseEntity<>("Bad JSON!", HttpStatus.BAD_REQUEST);
+		}
+		
+		log.info("Received and parsed JSON:"+om.writeValueAsString(received));
+		
+		rabbitManager.sendAsyncMessage(enablerLogicExchange, grcRoutingKey, messageConverter.toMessage(received, null));
+		return new ResponseEntity<String>(HttpStatus.OK);
+	}
+	
 
 	/**
 	 * Method forwards received request to interpolator component, and returns

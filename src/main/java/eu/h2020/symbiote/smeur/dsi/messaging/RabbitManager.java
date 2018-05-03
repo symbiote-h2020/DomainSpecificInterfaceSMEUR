@@ -95,6 +95,12 @@ public class RabbitManager {
 		}
 	}
 
+	public void sendAsyncMessage(String exchange, String routingKey, Object obj) {
+		
+		log.info("Sending async message");
+		rabbitTemplate.convertAndSend(exchange, routingKey, obj);
+	}
+	
 	public Object sendRpcMessage(String exchange, String routingKey, Object obj) {
 		log.info("Sending RPC message");
 
