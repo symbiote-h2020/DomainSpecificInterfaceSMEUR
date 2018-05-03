@@ -217,13 +217,8 @@ public class DomainSpecificInterfaceRestController {
 		GrcResponse k = (GrcResponse) rabbitManager.sendRpcMessage(enablerLogicExchange, grcRoutingKey,
 				messageConverter.toMessage(request, null));
 
-		try {
-			log.info(om.writeValueAsString(k));
-			return new ResponseEntity<String>(om.writeValueAsString(k), HttpStatus.OK);
-		} catch (NullPointerException e) {
-			log.info("Interpolator returned null!");
-			return new ResponseEntity<String>("Interpolator returned null!", HttpStatus.INTERNAL_SERVER_ERROR);
-		}
+		log.info(om.writeValueAsString(k));
+		return new ResponseEntity<String>(om.writeValueAsString(k), HttpStatus.OK);
 	}
 	
 	@RequestMapping(value = "/smeur/route", method = RequestMethod.POST)

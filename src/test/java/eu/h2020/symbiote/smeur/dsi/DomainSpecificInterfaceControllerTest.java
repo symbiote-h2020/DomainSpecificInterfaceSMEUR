@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.h2020.symbiote.rapplugin.messaging.RapPluginOkResponse;
 import eu.h2020.symbiote.smeur.dsi.controller.DomainSpecificInterfaceRestController;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
+import eu.h2020.symbiote.smeur.messages.GrcResponse;
 import eu.h2020.symbiote.smeur.messages.QueryPoiInterpolatedValuesResponse;
 
 public class DomainSpecificInterfaceControllerTest {
@@ -48,17 +49,10 @@ public class DomainSpecificInterfaceControllerTest {
 	}
 
 	@Test
-	public void testGrc_interpolatorError() throws JsonProcessingException {
-
-		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class))).thenReturn(null);
-		assertEquals(new ResponseEntity<String>("Interpolator returned null!",HttpStatus.INTERNAL_SERVER_ERROR), poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
-	}
-
-	@Test
 	public void testGrc_responseReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
-				.thenReturn("dummyStringResponse".getBytes());
+				.thenReturn(new GrcResponse());
 		assertNotNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
 	}
 	
