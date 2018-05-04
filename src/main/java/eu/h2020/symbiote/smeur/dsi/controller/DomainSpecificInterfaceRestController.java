@@ -1,7 +1,6 @@
 package eu.h2020.symbiote.smeur.dsi.controller;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -221,6 +220,15 @@ public class DomainSpecificInterfaceRestController {
 		return new ResponseEntity<String>(om.writeValueAsString(k), HttpStatus.OK);
 	}
 	
+	/**
+	 * Method parses received JSON to RouteCommunication object.
+	 * If Json is OK, it is forwarded to GRC component,
+	 * If not, bad request response is returned.
+	 * 
+	 * @param route
+	 * @return
+	 * @throws JsonProcessingException
+	 */
 	@RequestMapping(value = "/smeur/route", method = RequestMethod.POST)
 	public ResponseEntity<?> grcRequest(@RequestBody String route) throws JsonProcessingException {
 
