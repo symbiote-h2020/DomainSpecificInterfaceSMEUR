@@ -71,4 +71,14 @@ public class DomainSpecificInterfaceControllerTest {
 				.thenReturn(new QueryPoiInterpolatedValuesResponse());
 		assertNotNull(poiRest.interpolatorRequest("[\r\n\t{\r\n\t\t\"latitude\": \"45.8092991\",\r\n\t\t\"longitude\": \"15.9878854\"\r\n\t},\r\n\t{\r\n\t\t\"latitude\": \"45.8052317\",\r\n\t\t\"longitude\": \"15.9747292\"\r\n\t}\r\n]"));
 	}
+	
+	@Test
+	public void grcRequest_properJson() throws JsonProcessingException{
+		assertEquals(new ResponseEntity<>(HttpStatus.OK), poiRest.grcRequest("{\"location\":{\"@c\":\".WGS84Location\",\"longitude\":43.22,\"latitude\":15.21,\"altitude\":40.0,\"name\":\"location\",\"description\":[\"description\"]},\"routeId\":1234,\"timestamp\":15252667}"));
+	}
+	
+	@Test
+	public void grcRequest_badJson() throws JsonProcessingException{
+		assertEquals(new ResponseEntity<>("Bad JSON!", HttpStatus.BAD_REQUEST), poiRest.grcRequest("{\"location\":{\"@c\":\".WGS84Location\",\"longitude\":43.22,\"latitude\":15.21,\"altitude\":40.0,\"name\":\"location\",\"description\":[\"description\"]},\"routeId\":1234}"));
+	}
 }
