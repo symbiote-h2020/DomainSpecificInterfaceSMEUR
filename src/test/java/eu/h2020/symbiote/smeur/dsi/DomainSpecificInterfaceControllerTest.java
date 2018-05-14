@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import eu.h2020.symbiote.cloud.model.data.Result;
 import eu.h2020.symbiote.rapplugin.messaging.RapPluginOkResponse;
 import eu.h2020.symbiote.smeur.dsi.controller.DomainSpecificInterfaceRestController;
 import eu.h2020.symbiote.smeur.dsi.messaging.RabbitManager;
@@ -80,5 +81,16 @@ public class DomainSpecificInterfaceControllerTest {
 	@Test
 	public void grcRequest_badJson() throws JsonProcessingException{
 		assertEquals(new ResponseEntity<>("Bad JSON!", HttpStatus.BAD_REQUEST), poiRest.grcRequest("{\"location\":{\"@c\":\".WGS84Location\",\"longitude\":43.22,\"latitude\":15.21,\"altitude\":40.0,\"name\":\"location\",\"description\":[\"description\"]},\"routeId\":1234}"));
+	}
+	
+	@Test
+	public void testInitPoi() throws JsonProcessingException {
+
+		Result result = new Result();
+		RapPluginOkResponse re= new RapPluginOkResponse();
+		re.setBody(result);
+		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
+				.thenReturn(re);
+		assertNotNull(poiRest.poiLatLonInit(15.2133, 40.32131));
 	}
 }
