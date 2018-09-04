@@ -4,6 +4,9 @@ import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import java.awt.List;
+import java.util.ArrayList;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -53,7 +56,7 @@ public class DomainSpecificInterfaceControllerTest {
 	public void testGrc_responseReceived() throws JsonProcessingException {
 
 		when(rm.sendRpcMessage(any(String.class), any(String.class), any(String.class)))
-				.thenReturn(new GrcResponse());
+				.thenReturn(new ArrayList<GrcResponse>());
 		assertNotNull(poiRest.grcRequest(15.212, 30.2121, 16.2123, 32.212, "car", "airQuality"));
 	}
 	
