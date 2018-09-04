@@ -215,7 +215,7 @@ public class DomainSpecificInterfaceRestController {
 		GrcRequest request = new GrcRequest(from, to, transport, optimisation);
 
 		// send RMQ-rpc message to el-grc and return response
-		GrcResponse k = (GrcResponse) rabbitManager.sendRpcMessage(enablerLogicExchange, grcRoutingKey,
+		List<GrcResponse> k = (List<GrcResponse>) rabbitManager.sendRpcMessage(enablerLogicExchange, grcRoutingKey,
 				messageConverter.toMessage(request, null));
 
 		log.info(om.writeValueAsString(k));
