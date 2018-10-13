@@ -5,7 +5,7 @@
 
 Examples of using DSI to reach SMEUR services:
 
-## PoI search service
+## PoI (Point of Interest) search service
 
 - HTTP GET request
 - URL:
@@ -18,7 +18,7 @@ Examples of using DSI to reach SMEUR services:
 - Response:
   - json list of queried amenities containing latitude, longitude and name of result locations
 
-## GRC service
+## GRC (Green Route Calculation) service
 
 - HTTP GET request
 - URL:
