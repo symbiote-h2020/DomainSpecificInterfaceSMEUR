@@ -118,6 +118,7 @@ public class RabbitManager {
 		return receivedObj;
 	}
 
+	@Deprecated
 	public Object sendRpcMessageJSON(String exchange, String routingKey, Object obj) {
 		log.info("Sending RPC message");
 
